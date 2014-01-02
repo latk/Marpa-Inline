@@ -17,7 +17,7 @@ A small calculator language with basic arithmetic operators and the C comma oper
         ||  $x=Expression _ "*" _ $y=Expression => {{ $x * $y }}
         ||  $x=Expression _ "/" _ $y=Expression => {{ $x / $y }}
         _:
-        ||  m/\s*/ => {{ }}
+        ||  m/\s+/? => {{ }}
     END_GRAMMAR
 
     # will output "14"
@@ -25,7 +25,7 @@ A small calculator language with basic arithmetic operators and the C comma oper
         3 * 4 + (4, 2)
     END
     
- * Besides the postfix quantifiers `+` and `*`, the infix versions `+%` and `*%` can be used which take a separator. 
+ * Besides the postfix quantifiers `+`, `*`, and `?`, the infix versions `+%` and `*%` can be used which take a separator. 
  * Double-quoted and single-quoted string provide basic escapes similar to Perl.
  * Tokens can be specified with strings or via regexes (must use a `m` or `r` prefix, supported delimiters include `//`, `()`, `{}`, `[]`, `<>`).
  * The values of rules can be captured into variables which are then available inside the action block.
@@ -59,7 +59,6 @@ This DSL is implemented as a SLIF grammar which generates an intermediate AST wh
 
 ## Planned features
 
-  * A `?` quantifier. Right now nullable rules do not exist but can be emulated by zero-width regexes.
   * A `SKIP` rule that is auto-inserted between expressions. I.e. this works on the grammar level, not inside the lexer.
      * A `~` operator to suppress `SKIP` insertion.
   * Init block to declare state variables for the actions.

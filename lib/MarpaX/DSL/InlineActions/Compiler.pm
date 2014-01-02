@@ -49,7 +49,9 @@ sub codegen {
     for my $rule (sort keys %$actions) {
         $code .= qq(    "$rule" => sub{ use strict; use warnings; $actions->{$rule}},\n);
     }
-    $code .= qq(    "::array" => sub { my (\$self, \@parts) = \@_; return \\\@parts }\n);
+    $code .= qq(    "::array" => sub { my (undef, \@parts) = \@_; return \\\@parts },\n);
+    $code .= qq(    "::first" => sub { my (undef, \$thing) = \@_; return \$thing },\n);
+    $code .= qq(    "::undef" => sub { return },\n);
     $code .= qq(  };);
     
     $code = qq(sub {\n$code\n});
@@ -220,6 +222,15 @@ package MarpaX::DSL::InlineActions::Compiler::Option {
     }
 }
 
+package MarpaX::DSL::InlineActions::Compiler::Maybe {
+    use Moo;
+    extends 'MarpaX::DSL::InlineActions::Compiler::Rule';
+    sub accept {
+        my ($self, $visitor, @args) = @_;
+        return $visitor->visit_Maybe($self, @args);
+    }
+}
+
 package MarpaX::DSL::InlineActions::Compiler::Statement {
     use Moo;
     extends 'MarpaX::DSL::InlineActions::Compiler::RuleReference';
@@ -278,6 +289,21 @@ package MarpaX::DSL::InlineActions::Compiler::CompilingVisitor {
             lhs => $rule->lhs,
             rhs => [map { $self->assert_rule_exists($_); $_->lhs } @{$rule->rhs}],
             exists $self->actions->{$rule->lhs} ? (action => $rule->lhs) : (action => '::array'),
+        };
+        return;
+    }
+    
+    sub visit_Maybe {
+        my ($self, $rule) = @_;
+        push @{ $self->compiled_rules }, {
+            lhs => $rule->lhs,
+            rhs => [map { $self->assert_rule_exists($_); $_->lhs } $rule->rhs],
+            action => '::first',
+        };
+        push @{ $self->compiled_rules }, {
+            lhs => $rule->lhs,
+            rhs => [],
+            action => '::undef',
         };
         return;
     }
@@ -372,6 +398,18 @@ package MarpaX::DSL::InlineActions::Compiler::FlatteningVisitor {
             lhs => $ast->name,
         );
         return $rule;
+    }
+    
+    sub visit_Maybe {
+        my ($self, $ast) = @_;
+        my $rhs = $ast->rule->accept($self);
+        my $rule = MarpaX::DSL::InlineActions::Compiler::Maybe->new(
+            ast => $ast,
+            lhs => $rhs->lhs . "?",
+            rhs => $rhs,
+        );
+        $self->register_rule($rule->lhs, $rule);
+        return $rule->reference;
     }
     
     sub visit_Sequence {

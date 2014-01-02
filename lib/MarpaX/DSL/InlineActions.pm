@@ -46,8 +46,9 @@ Rule
     ||  ('(' _) InnerStatement (_ ')')   action => ::first
     ||  Rule (_) '+%' (_) Rule  action => do_SequenceRule
     ||  Rule (_) '*%' (_) Rule  action => do_SequenceRule
-    ||  Rule (_) '+'            action => do_SequenceRule
-    ||  Rule (_) '*'            action => do_SequenceRule
+    ||  Rule     '+'            action => do_SequenceRule
+    ||  Rule     '*'            action => do_SequenceRule
+    ||  Rule ('?')              action => do_Maybe
     
 regexBody
     ~   regexIntro '/' regexBodySlash   '/'
@@ -179,6 +180,13 @@ package MarpaX::DSL::InlineActions::Actions {
             rule => $rule,
             min => 0+($op =~ /\A[+]/),
             sep => $sep,
+        );
+    }
+    
+    sub do_Maybe {
+        my ($self, $rule) = @_;
+        return Maybe->$new(
+            rule => $rule,
         );
     }
 }

@@ -176,6 +176,25 @@ package MarpaX::DSL::InlineActions::Ast::RuleReference {
     }
 }
 
+package MarpaX::DSL::InlineActions::Ast::Maybe {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast::Rule';
+    has rule => (
+        is => 'ro',
+        required => 1,
+    );
+    
+    use overload '""' => sub {
+        my ($self) = @_;
+        return $self->rule . "?";
+    };
+    
+    sub accept {
+        my ($self, $visitor, @args) = @_;
+        return $visitor->visit_Maybe($self, @args);
+    }
+}
+
 package MarpaX::DSL::InlineActions::Ast::Sequence {
     use Moo;
     with 'MarpaX::DSL::InlineActions::Ast::Rule';

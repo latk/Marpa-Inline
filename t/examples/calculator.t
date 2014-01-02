@@ -32,7 +32,7 @@ my $parser = MarpaX::DSL::InlineActions->new(string => <<'END_GRAMMAR');
     }}
     
     _:
-    || m/\s*/ => {{
+    || m/\s+/? => {{
         return;
     }}
 END_GRAMMAR
