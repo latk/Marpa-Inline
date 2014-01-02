@@ -7,17 +7,17 @@ This is an experimental DSL to provide a more productive frontend to the Marpa::
 A small calculator language with basic arithmetic operators and the C comma operator. Sorry, the comma can't be surrounded by spaces without specifying an extra rule (for now).
 
     my $parser = MarpaX::DSL::InlineActions->new(string => <<'END_GRAMMAR');
-        TOP
-            := _ $val=Expression _ {{ $val }}
-        Expression
-            :=  "(" _ $list=Expression +% "," _ ")" {{ $list->[-1] }}
-            ||  $number=m/\d+/ {{ 0+$number }}
-            ||  $x=Expression _ "+" _ $y=Expression {{ $x + $y }}
-            ||  $x=Expression _ "-" _ $y=Expression {{ $x - $y }}
-            ||  $x=Expression _ "*" _ $y=Expression {{ $x * $y }}
-            ||  $x=Expression _ "/" _ $y=Expression {{ $x / $y }}
-        _
-            := m/\s*/ {{ }}
+        TOP:
+        ||  _ $val=Expression _ => {{ $val }}
+        Expression:
+        ||  "(" _ $list=Expression +% "," _ ")" => {{ $list->[-1] }}
+        ||  $number=m/\d+/ => {{ 0+$number }}
+        ||  $x=Expression _ "+" _ $y=Expression => {{ $x + $y }}
+        ||  $x=Expression _ "-" _ $y=Expression => {{ $x - $y }}
+        ||  $x=Expression _ "*" _ $y=Expression => {{ $x * $y }}
+        ||  $x=Expression _ "/" _ $y=Expression => {{ $x / $y }}
+        _:
+        ||  m/\s*/ => {{ }}
     END_GRAMMAR
 
     # will output "14"

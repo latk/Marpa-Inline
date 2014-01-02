@@ -19,13 +19,11 @@ Grammar
 Statements
     ::= Statement+ separator => __
 Statement
-    ::= name (_ ':=' _) Options action => do_Statement
+    ::= name (_ ':' _) Options action => do_Statement
 Options
-    ::= Option* separator => OpOption
-OpOption
-    ::= (_) '||' (_)
+    ::= Option+
 Option
-    ::= Patterns (__) code action => do_Option
+    ::= (_ '||' _) Patterns (_ '=>' _) code action => do_Option
 Patterns
     ::= Pattern+ separator => __    action => [values]
 Pattern
