@@ -12,22 +12,22 @@ my $parser = MarpaX::DSL::InlineActions->new(string => <<'END_GRAMMAR');
     }}
     
     Expression:
-    ||  "(" _ $list=Expression +% "," _ ")" => {{
+    "(" _ $list=Expression +% (_ "," _ => {{ }}) _ ")" => {{
         return $list->[-1];
     }}
-    ||  $number=m/\d+/ => {{
+    $number=m/\d+/ => {{
         return 0+$number;
     }}
-    ||  $x=Expression _ "+" _ $y=Expression => {{
+    $x=Expression _ "+" _ $y=Expression => {{
         return $x + $y;
     }}
-    ||  $x=Expression _ "-" _ $y=Expression => {{
+    $x=Expression _ "-" _ $y=Expression => {{
         return $x - $y;
     }}
-    ||  $x=Expression _ "*" _ $y=Expression => {{
+    $x=Expression _ "*" _ $y=Expression => {{
         return $x * $y;
     }}
-    ||  $x=Expression _ "/" _ $y=Expression => {{
+    $x=Expression _ "/" _ $y=Expression => {{
         return $x / $y;
     }}
     
@@ -38,5 +38,5 @@ my $parser = MarpaX::DSL::InlineActions->new(string => <<'END_GRAMMAR');
 END_GRAMMAR
 
 is $parser->parse(\<<'END'), 14;
-    3 * 4 + (4,2)
+    3 * 4 + (4, 2)
 END

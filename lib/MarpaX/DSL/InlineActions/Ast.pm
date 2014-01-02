@@ -42,7 +42,8 @@ package MarpaX::DSL::InlineActions::Ast::Statement {
     
     use overload '""' => sub {
         my ($self) = @_;
-        return $self->name . ":\n" . join "\n" => @{ $self->options };
+        return $self->name . ":\n" . join "\n" => map { "||  $_" } @{ $self->options } if defined $self->name;
+        return "(" . (join " || " => @{ $self->options }) . ")";
     };
     
     sub accept {
@@ -66,7 +67,7 @@ package MarpaX::DSL::InlineActions::Ast::Option {
     use overload '""' => sub {
         my ($self) = @_;
         my $pat = join " " => @{ $self->pattern };
-        return "|| $pat => {{" . $self->action . "}}";
+        return "$pat => {{" . $self->action . "}}";
     };
     
     sub accept {

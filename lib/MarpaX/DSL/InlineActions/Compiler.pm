@@ -6,15 +6,17 @@ use feature qw< unicode_strings say state >;
 use Eval::Closure ();
 use Marpa::R2 ();
 
+# use Data::Dump ();
+
 sub compile {
     my ($ast) = @_;
     my ($rules, $terminals, $actions) = MarpaX::DSL::InlineActions::Compiler::FlatteningVisitor->new->visit($ast);
-#         say "Rules:";
-#         say "    $_\t=> ", $rules->{$_}->ast =~ s/\n/\n    /gr for sort keys %$rules;
-#         say "Terminals:";
-#         say "    $_\t=> ", Data::Dump::pp $terminals->{$_} for sort keys %$terminals;
-#         say "Actions:";
-#         say "    $_\t=> $actions->{$_}" for sort keys %$actions;
+#     say "Rules:";
+#     say "    $_\t=> ", $rules->{$_}->ast =~ s/\n/\n    /gr for sort keys %$rules;
+#     say "Terminals:";
+#     say "    $_\t=> ", Data::Dump::pp $terminals->{$_} for sort keys %$terminals;
+#     say "Actions:";
+#     say "    $_\t=> $actions->{$_}" for sort keys %$actions;
     my $compiling_visitor = MarpaX::DSL::InlineActions::Compiler::CompilingVisitor->new(
         rules => $rules,
         terminals => $terminals,
@@ -230,6 +232,12 @@ package MarpaX::DSL::InlineActions::Compiler::Statement {
         required => 1,
     );
     
+    my $counter = 0;
+    sub BUILDARGS {
+        my ($class, %args) = @_;
+        return { lhs => "Statement-" . ++$counter, %args };
+    }
+    
     sub accept {
         my ($self, $visitor, @args) = @_;
         return $visitor->visit_Statement($self, @args);
@@ -398,7 +406,7 @@ package MarpaX::DSL::InlineActions::Compiler::FlatteningVisitor {
     sub visit_Statement {
         my ($self, $ast) = @_;
         my $rule = MarpaX::DSL::InlineActions::Compiler::Statement->new(
-            lhs => $ast->name,
+            defined $ast->name ? (lhs => $ast->name) : (),
             ast => $ast,
             rhses => [map { $_->accept($self) } @{ $ast->options }],
         );

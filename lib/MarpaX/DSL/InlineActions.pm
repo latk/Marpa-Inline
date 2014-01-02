@@ -20,10 +20,17 @@ Statements
     ::= Statement+ separator => __
 Statement
     ::= name (_ ':' _) Options action => do_Statement
+InnerStatement
+    ::= Statement       action => ::first
+    ||  Null Options    action => do_Statement
 Options
     ::= Option+
 Option
-    ::= (_ '||' _) Patterns (_ '=>' _) code action => do_Option
+    ::= (OpOption) Patterns (_ '=>' _) code action => do_Option
+OpOption
+    ::= _
+    ||  _ '||' _
+    
 Patterns
     ::= Pattern+ separator => __    action => [values]
 Pattern
@@ -36,6 +43,7 @@ Rule
     ||  regexBody regexModifiers    action => do_Regex
     ||  regexBody                   action => do_Regex
     ||  name                        action => do_RuleReference
+    ||  ('(' _) InnerStatement (_ ')')   action => ::first
     ||  Rule (_) '+%' (_) Rule  action => do_SequenceRule
     ||  Rule (_) '*%' (_) Rule  action => do_SequenceRule
     ||  Rule (_) '+'            action => do_SequenceRule
