@@ -6,12 +6,9 @@ use utf8;
 use feature qw< unicode_strings say >;
 use Marpa::R2;
 use String::Escape ();
-use mop;
 
 use MarpaX::DSL::InlineActions::Ast;
 use MarpaX::DSL::InlineActions::Compiler;
-
-use Data::Dump;
 
 my $grammar_source = <<'END_GRAMMAR';
 :default ::= action => [values]
@@ -115,54 +112,63 @@ sub new {
 
     say "$ast";
 
-    return MarpaX::DSL::InlineActions::Compiler->new->compile($ast);
+    return MarpaX::DSL::InlineActions::Compiler::compile($ast);
 }
 
-class MarpaX::DSL::InlineActions::Actions {
+package MarpaX::DSL::InlineActions::Actions {
 
     my $new = sub {
         my ($class, @args) = @_;
         "MarpaX::DSL::InlineActions::Ast::$class"->new(@args);
     };
 
-    method do_Grammar($statements) {
+    sub do_Grammar {
+        my ($self, $statements) = @_;
         return Grammar->$new(statements => $statements);
     }
 
-    method do_Statement($name, $options) {
+    sub do_Statement {
+        my ($self, $name, $options) = @_;
         return Statement->$new(name => $name, options => $options);
     }
     
-    method do_Option($pattern, $action) {
+    sub do_Option {
+        my ($self, $pattern, $action) = @_;
         $action =~ s/\A\{\{//;
         $action =~ s/\}\}\z//;
         return Option->$new(pattern => $pattern, action => $action);
     }
     
-    method do_Pattern($name, $rule) {
+    sub do_Pattern {
+        my ($self, $name, $rule) = @_;
         return NamedPattern->$new(name => $name, rule => $rule) if defined $name;
         return Pattern->$new(rule => $rule);
     }
     
-    method do_stringDq($str) {
+    sub do_stringDq {
+        my ($self, $str) = @_;
         return String->$new(value => String::Escape::unqqbackslash $str);
     }
     
-    method do_stringSq($str) {
+    sub do_stringSq {
+        my ($self, $str) = @_;
         return String->$new(value => String::Escape::unbackslash String::Escape::unsinglequote $str);
     }
     
-    method do_Regex($pattern, $modifiers) {
+    sub do_Regex {
+        my ($self, $pattern, $modifiers) = @_;
         $pattern =~ s/\A[mr].//;
         $pattern =~ s/.\z//;
         return Regex->$new(value => length $modifiers ? "(?$modifiers)$pattern" : $pattern);
     }
     
-    method do_RuleReference($name) {
+    sub do_RuleReference {
+        my ($self, $name) = @_;
         return RuleReference->$new(name => $name);
     }
     
-    method do_SequenceRule($rule, $op, $sep) {
+    sub do_SequenceRule {
+        my ($self, $rule, $op, $sep) = @_;
         return Sequence->$new(
             rule => $rule,
             min => 0+($op =~ /\A[+]/),

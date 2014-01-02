@@ -2,131 +2,205 @@ package MarpaX::DSL::InlineActions::Ast;
 use strict;
 use warnings;
 use feature qw< unicode_strings say >;
-use mop;
 use Carp ();
 use Scalar::Util ();
 use String::Escape ();
 
-role MarpaX::DSL::InlineActions::Ast {
-    method as_string;
-    method accept; # ($visitor, @args)
-}
+use Moo::Role;
+requires 'accept'; # ($visitor, @args)
 
-class Grammar with MarpaX::DSL::InlineActions::Ast {
-    has $!statements is ro = die q("statements" required);
+package MarpaX::DSL::InlineActions::Ast::Grammar {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast';
+    has statements => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        return join "\n" => @{ $!statements };
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        return join "\n" => @{ $self->statements };
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_Grammar($self, @args);
     }
 }
 
-class Statement with MarpaX::DSL::InlineActions::Ast {
-    has $!name is ro    = die q("name" required);
-    has $!options is ro = die q("options" required);
+package MarpaX::DSL::InlineActions::Ast::Statement {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast';
+    has name => (
+        is => 'ro',
+        requires => 1,
+    );
+    has options => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        return "$!name\n    :=  " . join "\n    ||  " => @{ $!options };
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        return $self->name . "\n    :=  " . join "\n    ||  " => @{ $self->options };
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_Statement($self, @args);
     }
 }
 
-class Option with MarpaX::DSL::InlineActions::Ast {
-    has $!pattern is ro = die q("pattern" required);
-    has $!action  is ro = die q("action" required);
+package MarpaX::DSL::InlineActions::Ast::Option {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast';
+    has pattern => (
+        is => 'ro',
+        required => 1,
+    );
+    has action => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        my $pat = join " " => @{ $!pattern };
-        return "$pat {{$!action}}";
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        my $pat = join " " => @{ $self->pattern };
+        return "$pat {{" . $self->action . "}}";
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_Option($self, @args);
     }
 }
 
-class Pattern with MarpaX::DSL::InlineActions::Ast {
-    has $!rule is ro = die q("rule" required);
+package MarpaX::DSL::InlineActions::Ast::Pattern {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast';
+    has rule => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        return ''.$!rule;
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        return '' . $self->rule;
+    };
     
-    method accept($visitor, @args) {
-        die "This method shouldn't be called";
-    }
-}
-
-class NamedPattern extends MarpaX::DSL::InlineActions::Ast::Pattern {
-    has $!name is ro;
-    
-    method as_string is overload('""') {
-        return $!name . '=' . $self->rule;
-    }
-    
-    method accept($visitor, @args) {
-        die "This method shouldn't be called";
+    sub accept {
+        my ($self, $visitor, @args) = @_;
+        die "This sub shouldn't be called";
     }
 }
 
-class Rule with MarpaX::DSL::InlineActions::Ast is abstract {
+package MarpaX::DSL::InlineActions::Ast::NamedPattern {
+    use Moo;
+    extends 'MarpaX::DSL::InlineActions::Ast::Pattern';
+    has name => (
+        is => 'ro',
+    );
     
+    use overload '""' => sub {
+        my ($self) = @_;
+        return $self->name . '=' . $self->rule;
+    };
+    
+    sub accept {
+        my ($self, $visitor, @args) = @_;
+        die "This sub shouldn't be called";
+    }
 }
 
-class String extends MarpaX::DSL::InlineActions::Ast::Rule {
-    has $!value is ro = die q("value" required);
+package MarpaX::DSL::InlineActions::Ast::Rule {
+    use Moo::Role;
+    with 'MarpaX::DSL::InlineActions::Ast';
+}
+
+package MarpaX::DSL::InlineActions::Ast::String {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast::Rule';
+    has value => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        return String::Escape::qqbackslash $!value;
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        return String::Escape::qqbackslash $self->value;
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_String($self, @args);
     }
 }
 
-class Regex extends MarpaX::DSL::InlineActions::Ast::Rule {
-    has $!value is ro = die q("value" required);
+package MarpaX::DSL::InlineActions::Ast::Regex {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast::Rule';
+    has value => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        return 'm/' . qr/$!value/ . '/';
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        my $value = $self->value;
+        return 'm/' . qr/$value/ . '/';
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_Regex($self, @args);
     }
 }
 
-class RuleReference extends MarpaX::DSL::InlineActions::Ast::Rule {
-    has $!name is ro = die q("name" required);
+package MarpaX::DSL::InlineActions::Ast::RuleReference {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast::Rule';
+    has name => (
+        is => 'ro',
+        required => 1,
+    );
     
-    method as_string is overload('""') {
-        return $!name;
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        return $self->name;
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_RuleReference($self, @args);
     }
 }
 
-class Sequence extends MarpaX::DSL::InlineActions::Ast::Rule {
-    has $!rule is ro = die q("rule" required);
-    has $!min  is ro = 1;
-    has $!sep  is ro;
+package MarpaX::DSL::InlineActions::Ast::Sequence {
+    use Moo;
+    with 'MarpaX::DSL::InlineActions::Ast::Rule';
+    has rule => (
+        is => 'ro',
+        required => 1,
+    );
+    has min => (
+        is => 'ro',
+        default => sub { 1 },
+    );
+    has sep => (
+        is => 'ro',
+    );
     
-    method as_string is overload('""') {
-        my $op = $!min ? '+' : '*';
-        return "$!rule $op% $!sep" if $!sep;
-        return "$!rule$op";
-    }
+    use overload '""' => sub {
+        my ($self) = @_;
+        my $rule = $self->rule;
+        my $op = $self->min ? '+' : '*';
+        my $sep = $self->sep;
+        return "$rule $op% $sep" if $sep;
+        return "$rule$op";
+    };
     
-    method accept($visitor, @args) {
+    sub accept {
+        my ($self, $visitor, @args) = @_;
         return $visitor->visit_Sequence($self, @args);
     }
 }
