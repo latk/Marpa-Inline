@@ -206,6 +206,9 @@ package MarpaX::DSL::InlineActions::Compiler::SequenceRule {
     has sep => (
         is => 'ro',
     );
+    has proper => (
+        is => 'ro',
+    );
     
     sub accept {
         my ($self, $visitor, @args) = @_;
@@ -315,6 +318,7 @@ package MarpaX::DSL::InlineActions::Compiler::CompilingVisitor {
             rhs => [do { $self->assert_rule_exists($rule->rhs); $rule->rhs->lhs }],
             min => $rule->min,
             separator => do { $self->assert_rule_exists($rule->sep); $rule->sep->lhs },
+            proper => $rule->proper,
             exists $self->actions->{$rule->lhs} ? (action => $rule->lhs) : (action => '::array'),
         };
         return;
@@ -419,6 +423,7 @@ package MarpaX::DSL::InlineActions::Compiler::FlatteningVisitor {
             rhs => $ast->rule->accept($self),
             min => $ast->min,
             $ast->sep ? (sep => $ast->sep->accept($self)) : (),
+            proper => $ast->proper,
         );
         $self->register_rule($rule->lhs, $rule);
         return $rule->reference;

@@ -44,8 +44,9 @@ Rule
     ||  regexBody                   action => do_Regex
     ||  name                        action => do_RuleReference
     ||  ('(' _) InnerStatement (_ ')')   action => ::first
-    ||  Rule sequenceQuantifier (_ '%' _) Rule  action => do_SequenceRule
-    ||  Rule sequenceQuantifier                 action => do_SequenceRule
+    ||  Rule sequenceQuantifier (_ '%') '!'  (_) Rule    action => do_SequenceRule # a,a,a
+    ||  Rule sequenceQuantifier (_ '%') Null (_) Rule    action => do_SequenceRule # a,a,a,
+    ||  Rule sequenceQuantifier                         action => do_SequenceRule # aaa
     ||  Rule ('?')              action => do_Maybe
 sequenceQuantifier ~  '+' | '*'
     
@@ -174,11 +175,12 @@ package MarpaX::DSL::InlineActions::Actions {
     }
     
     sub do_SequenceRule {
-        my ($self, $rule, $op, $sep) = @_;
+        my ($self, $rule, $op, $exact, $sep) = @_;
         return Sequence->$new(
             rule => $rule,
             min => 0+($op eq '+'),
             sep => $sep,
+            proper => 0+!!$exact,
         );
     }
     

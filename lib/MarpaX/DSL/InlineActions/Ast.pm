@@ -209,6 +209,10 @@ package MarpaX::DSL::InlineActions::Ast::Sequence {
     has sep => (
         is => 'ro',
     );
+    has proper => (
+        is => 'ro',
+        default => sub { 0 },
+    );
     
     use overload '""' => sub {
         my ($self) = @_;

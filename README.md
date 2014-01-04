@@ -10,7 +10,7 @@ A small calculator language with basic arithmetic operators and the C comma oper
         TOP:
         ||  _ $val=Expression _ => {{ $val }}
         Expression:
-        ||  "(" _ $list=Expression+ % (_ "," _ => {{ }}) _ ")" => {{ $list->[-1] }}
+        ||  "(" _ $list=Expression+ %! (_ "," _ => {{ }}) _ ")" => {{ $list->[-1] }}
         ||  $number=m/\d+/ => {{ 0+$number }}
         ||  $x=Expression _ "+" _ $y=Expression => {{ $x + $y }}
         ||  $x=Expression _ "-" _ $y=Expression => {{ $x - $y }}
@@ -25,7 +25,7 @@ A small calculator language with basic arithmetic operators and the C comma oper
         3 * 4 + (4, 2)
     END
     
- * Available quantifiers include the postfix operators `+`, `*`, and `?`. For `+` and `*`, a separator can be specified with `%`: `rule+ % ","`.
+ * Available quantifiers include the postfix operators `+`, `*`, and `?`. For `+` and `*`, a separator can be specified with `%` or `%!`: `rule+ % ","`. The `%` allows loose separation: `a, a,` which allows a trailing separator. The `%!` variant enforces proper separation: `a, a`.
  * Double-quoted and single-quoted string provide basic escapes similar to Perl.
  * Tokens can be specified with strings or via regexes (must use a `m` or `r` prefix, supported delimiters include `//`, `()`, `{}`, `[]`, `<>`).
  * The values of rules can be captured into variables which are then available inside the action block.
