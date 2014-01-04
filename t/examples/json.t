@@ -6,6 +6,7 @@ use MarpaX::DSL::InlineActions;
 use Test::More tests => 1;
 
 my $parser = MarpaX::DSL::InlineActions->new(string => <<'END_GRAMMAR');
+    # see "ECMA 404" for the JSON standard, or <json.org> for a summary
     TOP:
         _ $val=Value _ => {{ $val }}
     Value:
