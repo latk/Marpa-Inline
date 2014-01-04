@@ -74,7 +74,7 @@ regexModifier ~ [alupimsx]
 
 Null ::= action => ::undef
 _ ::= ws
-_ ::= comment
+_ ::= _ comment _
 _ ::=
 __ ::= ws
 ws ~ [\s]+
