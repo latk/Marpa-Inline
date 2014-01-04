@@ -317,7 +317,7 @@ package MarpaX::DSL::InlineActions::Compiler::CompilingVisitor {
             lhs => $rule->lhs,
             rhs => [do { $self->assert_rule_exists($rule->rhs); $rule->rhs->lhs }],
             min => $rule->min,
-            separator => do { $self->assert_rule_exists($rule->sep); $rule->sep->lhs },
+            $rule->sep ? (separator => do { $self->assert_rule_exists($rule->sep); $rule->sep->lhs }) : (),
             proper => $rule->proper,
             exists $self->actions->{$rule->lhs} ? (action => $rule->lhs) : (action => '::array'),
         };
