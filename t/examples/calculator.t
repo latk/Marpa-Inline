@@ -12,7 +12,7 @@ my $parser = MarpaX::DSL::InlineActions->new(string => <<'END_GRAMMAR');
     }}
     
     Expression:
-    "(" _ $list=Expression +% (_ "," _ => {{ }}) _ ")" => {{
+    "(" _ $list=Expression+ % (_ "," _ => {{ }}) _ ")" => {{
         return $list->[-1];
     }}
     $number=m/\d+/ => {{

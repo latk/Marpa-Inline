@@ -44,11 +44,10 @@ Rule
     ||  regexBody                   action => do_Regex
     ||  name                        action => do_RuleReference
     ||  ('(' _) InnerStatement (_ ')')   action => ::first
-    ||  Rule (_) '+%' (_) Rule  action => do_SequenceRule
-    ||  Rule (_) '*%' (_) Rule  action => do_SequenceRule
-    ||  Rule     '+'            action => do_SequenceRule
-    ||  Rule     '*'            action => do_SequenceRule
+    ||  Rule sequenceQuantifier (_ '%' _) Rule  action => do_SequenceRule
+    ||  Rule sequenceQuantifier                 action => do_SequenceRule
     ||  Rule ('?')              action => do_Maybe
+sequenceQuantifier ~  '+' | '*'
     
 regexBody
     ~   regexIntro '/' regexBodySlash   '/'
@@ -117,7 +116,7 @@ sub new {
     my $result = $recce->value // die "No parse!";
     my $ast = $$result;
 
-    say "$ast";
+#     say "$ast";
 
     return MarpaX::DSL::InlineActions::Compiler::compile($ast);
 }
@@ -178,7 +177,7 @@ package MarpaX::DSL::InlineActions::Actions {
         my ($self, $rule, $op, $sep) = @_;
         return Sequence->$new(
             rule => $rule,
-            min => 0+($op =~ /\A[+]/),
+            min => 0+($op eq '+'),
             sep => $sep,
         );
     }
