@@ -1,0 +1,1 @@
+exclude = References::ProhibitDoubleSigils CodeLayout::RequireTidyCode
